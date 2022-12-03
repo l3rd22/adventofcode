@@ -1,11 +1,12 @@
+def priority(item_type):
+    if item_type.isupper():
+        return ord(item_type) - ord("A") + 27
+    return ord(item_type) - ord("a") + 1
+
+
 sum_priorities = 0
 possible_badges = ["a"]
 sum_badge_priority = -1
-priority = (
-    lambda char: (ord(char) - ord("A") + 27)
-    if char.isupper()
-    else (ord(char) - ord("a") + 1)
-)
 with open("input.txt", "r") as content_list:
     for elf_number, rucksack in enumerate(r.rstrip() for r in content_list):
         item_type = [

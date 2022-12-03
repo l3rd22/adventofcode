@@ -8,13 +8,13 @@ sum_priorities = 0
 possible_badges = ["a"]
 sum_badge_priority = -1
 with open("input.txt", "r") as content_list:
-    for elf_number, rucksack in enumerate(r.rstrip() for r in content_list):
+    for elf, rucksack in enumerate(r.rstrip() for r in content_list):
         first_compartment = set(rucksack[: len(rucksack) // 2])
         second_compartement = set(rucksack[len(rucksack) // 2 :])
         item_type = list(first_compartment & second_compartement)[0]
         sum_priorities += priority(item_type)
 
-        if elf_number % 3:
+        if elf % 3:
             possible_badges = possible_badges & set(rucksack)
         else:
             sum_badge_priority += priority(list(possible_badges)[0])

@@ -5,24 +5,23 @@ def sgn(x):
 starting_pos = (0 + 0j)
 head_positions = [starting_pos]
 with open("input.txt", "r") as moveset:
-    for d, s in (move.rstrip().split() for move in moveset):
-        direction, steps = d, int(s)
+    for direction, steps in (move.rstrip().split() for move in moveset):
         match direction:
             case "R":
                 head_positions.extend(
-                    head_positions[-1] + (1 + 0j) for _ in range(steps)
+                    head_positions[-1] + (1 + 0j) for _ in range(int(steps))
                 )
             case "L":
                 head_positions.extend(
-                    head_positions[-1] + (-1 + 0j) for _ in range(steps)
+                    head_positions[-1] + (-1 + 0j) for _ in range(int(steps))
                 )
             case "U":
                 head_positions.extend(
-                    head_positions[-1] + (0 + 1j) for _ in range(steps)
+                    head_positions[-1] + (0 + 1j) for _ in range(int(steps))
                 )
             case "D":
                 head_positions.extend(
-                    head_positions[-1] + (0 - 1j) for _ in range(steps)
+                    head_positions[-1] + (0 - 1j) for _ in range(int(steps))
                 )
 knot_positions = [head_positions]
 for knot_number in range(1, 10):

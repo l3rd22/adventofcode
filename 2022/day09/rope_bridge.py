@@ -30,7 +30,7 @@ for knot_number in range(1, 10):
     for i, lead in enumerate(lead_pos[1:]):
         knot_pos.append(knot_pos[-1])
         distance = lead - knot_pos[-1]
-        if abs(distance * distance.conjugate()) > 2:
+        if abs(distance) >= 2:
             knot_pos[-1] += (sgn(distance.real) + sgn(distance.imag) * 1j)
     knot_positions.append(knot_pos)
 print(len(set(knot_positions[1])))

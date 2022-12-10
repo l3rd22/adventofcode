@@ -9,7 +9,7 @@
 print(sum(X[i - 1] * i for i in range(20, 221, 40)))
 print(
     "".join(
-        ["", "\n"][cycle % 40 == 0] + [".", "#"][cycle % 40 - sprite_pos in (-1, 0, 1)]
+        ["", "\n"][cycle % 40 == 0] + [" ", "█"][cycle % 40 - sprite_pos in (-1, 0, 1)]
         for cycle, sprite_pos in enumerate(X[:-1])
     )
 )

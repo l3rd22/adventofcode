@@ -17,11 +17,6 @@ def a_star(grid, start, finish):
                 successor = open_list[
                     [node["node"] for node in open_list].index(successor)
                 ]
-                if tentative_g >= successor.get("g", 0):
-                    continue
-                successor["predecessor"] = current_node
-                successor["g"] = tentative_g
-                successor["f"] = tentative_g + distance(successor["node"], finish)
             except ValueError:
                 successor = dict(
                     node=successor,
@@ -30,6 +25,12 @@ def a_star(grid, start, finish):
                     f=tentative_g + distance(successor, finish),
                 )
                 open_list.append(successor)
+            else:
+                if tentative_g >= successor.get("g", 0):
+                    continue
+                successor["predecessor"] = current_node
+                successor["g"] = tentative_g
+                successor["f"] = tentative_g + distance(successor["node"], finish)
     return None
 
 

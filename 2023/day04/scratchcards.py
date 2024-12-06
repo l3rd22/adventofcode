@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
+import re
+
 
 def main():
     games = []
     with open("input.txt", "r") as fobj:
         for line in fobj:
-            winning, mynums = line.split("|")
-            game, winning = winning.split(":")
-            winning = set(
-                map(int, [winning[i : i + 3] for i in range(0, len(winning) - 2, 3)])
-            )
-            mynums = set(
-                map(int, [mynums[i : i + 3] for i in range(0, len(mynums) - 2, 3)])
-            )
-            games.append((winning, mynums))
+            win = set(map(int, re.findall(r"\d+", line.split(":")[1].split("|")[0])))
+            mynums = set(map(int, re.findall(r"\d+", line.split("|")[1])))
+            games.append((win, mynums))
     print(sum(int(2 ** (len(game[0] & game[1]) - 1)) for game in games))
 
     matching = [len(game[0] & game[1]) for game in games]

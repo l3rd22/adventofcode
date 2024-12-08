@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
 
-def dfs(nums, check):
-    if len(nums) == 1:
-        return nums[0] == check
-    if nums[0] > check:
-        return False
-    if not dfs([nums[0] + nums[1], *nums[2:]], check):
-        # return dfs([nums[0] * nums[1], *nums[2:]], check)  # uncomment for part 1
-        if not dfs([nums[0] * nums[1], *nums[2:]], check):
-            return dfs([int(str(nums[0]) + str(nums[1])), *nums[2:]], check)
-    return True
+def reverse_dfs(check, nums):
+    if len(nums) == 0:
+        return check == 0
+    if check >= nums[-1]:
+        if reverse_dfs(check - nums[-1], nums[:-1]):
+            return True
+    if check % nums[-1] == 0:
+        if reverse_dfs(check // nums[-1], nums[:-1]):
+            return True
+    # # uncomment for part 2
+    # if str(check)[1:].endswith(str(nums[-1])):
+    #     return reverse_dfs(int(str(check)[: -len(str(nums[-1]))]), nums[:-1])
+    return False
 
 
 def main():
@@ -19,9 +22,9 @@ def main():
             sum(
                 (
                     int(ls[0])
-                    if dfs(
-                        list(map(int, (ls := line.split(": "))[1].split(" "))),
-                        int(ls[0]),
+                    if reverse_dfs(
+                        int((ls := line.split(": "))[0]),
+                        list(map(int, ls[1].split(" "))),
                     )
                     else 0
                 )

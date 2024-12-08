@@ -18,10 +18,10 @@ def main():
         print(
             sum(
                 (
-                    int(line.split(": ")[0])
+                    int(ls[0])
                     if dfs(
-                        list(map(int, line.split(": ")[1].split(" "))),
-                        int(line.split(": ")[0]),
+                        list(map(int, (ls := line.split(": "))[1].split(" "))),
+                        int(ls[0]),
                     )
                     else 0
                 )

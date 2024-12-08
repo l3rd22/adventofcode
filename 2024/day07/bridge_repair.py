@@ -7,7 +7,9 @@ def dfs(nums, check):
     if nums[0] > check:
         return False
     if not dfs([nums[0] + nums[1], *nums[2:]], check):
-        return dfs([nums[0] * nums[1], *nums[2:]], check)
+        # return dfs([nums[0] * nums[1], *nums[2:]], check)  # uncomment for part 1
+        if not dfs([nums[0] * nums[1], *nums[2:]], check):
+            return dfs([int(str(nums[0]) + str(nums[1])), *nums[2:]], check)
     return True
 
 

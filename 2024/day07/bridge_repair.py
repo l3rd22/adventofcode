@@ -21,12 +21,8 @@ def main():
         print(
             sum(
                 (
-                    int(ls[0])
-                    if reverse_dfs(
-                        int((ls := line.split(": "))[0]),
-                        list(map(int, ls[1].split(" "))),
-                    )
-                    else 0
+                    (nums := list(map(int, line.replace(":", "").split(" "))))[0]
+                    * reverse_dfs(nums[0], nums[1:])
                 )
                 for line in fobj
             )

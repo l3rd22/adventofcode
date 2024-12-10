@@ -24,7 +24,7 @@ def apply_jokers(count):
 def main():
     hands = []
     bets = []
-    with open("example_input.txt", "r") as fobj:
+    with open("input.txt", "r") as fobj:
         for line in fobj:
             hand, bet = line.rstrip().split(" ")
             for k, v in dct.items():

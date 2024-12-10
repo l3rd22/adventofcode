@@ -20,12 +20,15 @@ def dfs(r, c, height_map):
 def main():
     with open("input.txt", "r") as fobj:
         height_map = [[int(h) for h in line.rstrip()] for line in fobj]
-    total = 0
+    total1 = 0
+    total2 = 0
     for r in range(len(height_map)):
         for c in range(len(height_map[r])):
             if height_map[r][c] == 0:
-                total += len(set(dfs(r, c, height_map)))
-    print(total)
+                total1 += len(set(trailheads := dfs(r, c, height_map)))
+                total2 += len(trailheads)
+    print(total1)
+    print(total2)
 
 
 if __name__ == "__main__":

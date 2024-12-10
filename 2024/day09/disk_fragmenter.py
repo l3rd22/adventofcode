@@ -19,6 +19,28 @@ def main():
         )
     )
 
+    files = [
+        (sum(int(k) for k in disk_map[: 2 * i]), int(f), i)
+        for i, f in enumerate(disk_map[::2])
+    ]
+    empty = [
+        (sum(int(k) for k in disk_map[: 2 * i + 1]), int(f))
+        for i, f in enumerate(disk_map[1::2])
+    ]
+    for i, f in enumerate(files[::-1]):
+        for j, e in enumerate(empty):
+            if e[0] >= f[0]:
+                break
+            if e[1] > f[1]:
+                files[-(i + 1)] = (e[0], *f[1:])
+                empty[j] = (e[0] + f[1], e[1] - f[1])
+                break
+            if e[1] == f[1]:
+                files[-(i + 1)] = (e[0], *f[1:])
+                empty.pop(j)
+                break
+    print(sum(f[2] * (f[0] * f[1] + (f[1] * (f[1] - 1)) // 2) for f in files))
+
 
 if __name__ == "__main__":
     main()

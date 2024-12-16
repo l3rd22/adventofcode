@@ -14,11 +14,11 @@ def main():
             X, Y = X + error, Y + error
             # luckily, none of the inputs seem to be linearly dependent
             det = ax * by - bx * ay
-            Adet = by * X - bx * Y
-            Bdet = -ay * X + ax * Y
-            if Adet % det != 0 or Bdet % det != 0:
+            A, Ar = divmod(by * X - bx * Y, det)
+            B, Br = divmod(-ay * X + ax * Y, det)
+            if Ar or Br:
                 continue
-            tokens += 3 * (Adet // det) + Bdet // det
+            tokens += 3 * A + B
         print(tokens)
 
 

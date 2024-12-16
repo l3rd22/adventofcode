@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import re
-import matplotlib.pyplot as plt
 
 
 def variance(samples):

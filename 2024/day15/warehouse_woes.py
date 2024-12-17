@@ -19,9 +19,36 @@ def move(warehouse, pos, dir_):
         return False
     if warehouse[newpos] == "O":
         move(warehouse, newpos, dir_)
+    if warehouse[newpos] in "[]":
+        if dir_ in (1, -1):
+            move(warehouse, newpos, dir_)
+        elif not move_multi(
+            warehouse, [newpos, newpos + {"[": 1, "]": -1}[warehouse[newpos]]], dir_
+        ):
+            return False
     if warehouse[newpos] == ".":
         warehouse[newpos] = warehouse[pos]
         warehouse[pos] = "."
+        return True
+    return False
+
+
+def move_multi(warehouse, pos, dir_):
+    newpos = [p + dir_ for p in pos]
+    if any(warehouse[p] == "#" for p in newpos):
+        return False
+    boxes = [np for np in newpos if warehouse[np] in "[]"]
+    for b in boxes:
+        if warehouse[b] == "[" and (b + 1) not in boxes:
+            boxes.append(b + 1)
+        if warehouse[b] == "]" and (b - 1) not in boxes:
+            boxes.append(b - 1)
+    if boxes:
+        move_multi(warehouse, boxes, dir_)
+    if all(warehouse[p] == "." for p in newpos):
+        for np, p in zip(newpos, pos):
+            warehouse[np] = warehouse[p]
+            warehouse[p] = "."
         return True
     return False
 
@@ -43,6 +70,21 @@ def main():
         # print_warehouse(warehouse)
     print(
         sum(int(p.real) + 100 * int(p.imag) for p in warehouse if warehouse[p] == "O")
+    )
+
+    warehouse = {
+        (2 * x + xi + 1j * y): c
+        for y, line in enumerate(warehouse_.split("\n"))
+        for x, char in enumerate(line)
+        for xi, c in enumerate({"#": "##", "O": "[]", ".": "..", "@": "@."}[char])
+    }
+    robot = list(warehouse.keys())[list(warehouse.values()).index("@")]
+    for m in moves:
+        dir_ = direction[m]
+        robot += move(warehouse, robot, dir_) * dir_
+        # print_warehouse(warehouse)
+    print(
+        sum(int(p.real) + 100 * int(p.imag) for p in warehouse if warehouse[p] == "[")
     )
 
 

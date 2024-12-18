@@ -104,6 +104,20 @@ def combo(operand):
             raise ValueError
 
 
+def run(program, verbose=False):
+    global ip
+    ip = 0
+    while ip < len(program):
+        opcode, operand = program[ip : ip + 2]
+        if verbose:
+            print(
+                f"\n{ip:02d}\t{op[opcode].__name__} {operand:02d}",
+                end="\t\t",
+            )
+        op[opcode](operand, verbose)
+        ip += 2
+
+
 def disassemble(program):
     header = "```\nASSUME\tCS:CODE\n\nCODE\tSEGMENT\nProgram:"
     body = "\n".join(
@@ -114,7 +128,11 @@ def disassemble(program):
     return f"{header}\n{body}\n{footer}"
 
 
-combo_verbose = {4: "A", 5: "B", 6: "C"}
+combo_verbose = {
+    4: "A",
+    5: "B",
+    6: "C",
+}
 op = {
     0: adv,
     1: bxl,
@@ -125,8 +143,6 @@ op = {
     6: bdv,
     7: cdv,
 }
-A, B, C = 0, 0, 0
-ip = 0
 
 
 def main(verbose=False):
@@ -142,28 +158,15 @@ def main(verbose=False):
     if verbose:
         print(disassemble(program), end="\n\n")
         print(f"Register A: {A}\nRegister B: {B}\nRegister C: {C}")
-
-    while ip < len(program):
-        opcode, operand = program[ip : ip + 2]
-        if verbose:
-            print(
-                f"\n{ip:02d}\t{op[opcode].__name__} {operand:02d}",
-                end="\t\t",
-            )
-        op[opcode](operand, verbose)
-        ip += 2
+    run(program, verbose)
     print("\n" if verbose else "\b ")
 
     program_str = ",".join(map(str, program))
     A_copy = 0
     while A_copy < (1 << 3 * len(program)):
         A, B, C = A_copy, B_init, C_init
-        ip = 0
         with redirect_stdout(StringIO()) as output:
-            while ip < len(program):
-                opcode, operand = program[ip : ip + 2]
-                op[opcode](operand)
-                ip += 2
+            run(program)
         output_str = output.getvalue().rstrip(",")
         if output_str == program_str:
             break

@@ -28,10 +28,9 @@ def bst(operand):
 
 def jnz(operand):
     global ip
-    if not A:
-        return ip + 2
-    ip = operand - 2
-    return operand
+    if A:
+        ip = operand - 2
+    return ip + 2
 
 
 def bxc(operand):

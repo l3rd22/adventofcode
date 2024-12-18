@@ -3,6 +3,7 @@
 from io import StringIO
 import sys
 from contextlib import redirect_stdout
+import argparse
 
 
 def adv(operand):
@@ -130,7 +131,11 @@ comboinfo = {
 }
 
 
-def main(verbose=False):
+def main(argv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true")
+    args = parser.parse_args()
+
     global A, B, C
     global ip
     with open("input.txt", "r") as fobj:
@@ -140,11 +145,11 @@ def main(verbose=False):
         next(fobj)
         program = tuple(map(int, next(fobj)[9:].split(",")))
 
-    if verbose:
+    if args.verbose:
         print(disassemble(program), end="\n\n")
         print(f"Register A: {A}\nRegister B: {B}\nRegister C: {C}", end="\n\n")
-    run(program, verbose)
-    print("" if verbose else "\b ")
+    run(program, args.verbose)
+    print("" if args.verbose else "\b ")
 
     A_copy = 0
     prg_ptr = -1
@@ -165,4 +170,4 @@ def main(verbose=False):
 
 
 if __name__ == "__main__":
-    main(verbose=False)
+    main(sys.argv)

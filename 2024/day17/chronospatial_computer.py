@@ -1,105 +1,120 @@
 #!/usr/bin/env python3
 
+from io import StringIO
+import sys
+from contextlib import redirect_stdout
 
-def adv(operand):
+
+def adv(operand, verbose=False):
     global A
     res = A >> combo(operand)
     A = res
+    if verbose:
+        sys.stdout.write(
+            f"A <- A >> {combo_verbose.get(operand, f'{operand:02d}')}\tA: {res:02d}"
+        )
     return res
 
 
-def bxl(operand):
+def bxl(operand, verbose=False):
     global B
     res = B ^ operand
     B = res
+    if verbose:
+        sys.stdout.write(f"B <- B xor {operand:02d}\tB: {res:02d}")
     return res
 
 
-def bst(operand):
+def bst(operand, verbose=False):
     global B
     res = combo(operand) & 0b111
     B = res
+    if verbose:
+        sys.stdout.write(
+            f"B <- {combo_verbose.get(operand, f'{operand:02d}')} mod 08\tB: {res:02d}"
+        )
     return res
 
 
-def jnz(operand):
-    global instruction_pointer
+def jnz(operand, verbose=False):
+    global ip
     if not A:
-        return
-    instruction_pointer = operand - 2
+        if verbose:
+            sys.stdout.write("A =/= 00?\tNOP")
+        return ip + 2
+    ip = operand - 2
+    if verbose:
+        sys.stdout.write(f"A =/= 00?\tJMP {operand:02d}")
     return operand
 
 
-def bxc(operand):
+def bxc(operand, verbose=False):
     global B
     res = B ^ C
     B = res
+    if verbose:
+        sys.stdout.write(f"B <- B xor C\tB: {res:02d}")
     return res
 
 
-def out(operand):
+def out(operand, verbose=False):
     res = combo(operand) & 0b111
-    # print(f"{res},", end="")
-    stdout.append(str(res))
+    if verbose:
+        sys.stdout.write(
+            f"OUT {combo_verbose.get(operand, f'{operand:02d}')} mod 08\tOUT {res:02d}"
+        )
+    else:
+        sys.stdout.write(f"{res},")
     return res
 
 
-def bdv(operand):
+def bdv(operand, verbose=False):
     global B
     res = A >> combo(operand)
     B = res
+    if verbose:
+        sys.stdout.write(
+            f"B <- A >> {combo_verbose.get(operand, f'{operand:02d}')}\tB: {res:02d}"
+        )
     return res
 
 
-def cdv(operand):
+def cdv(operand, verbose=False):
     global C
     res = A >> combo(operand)
     C = res
+    if verbose:
+        sys.stdout.write(
+            f"C <- A >> {combo_verbose.get(operand, f'{operand:02d}')}\tC: {res:02d}"
+        )
     return res
 
 
 def combo(operand):
-    if operand in range(4):
-        return operand
-    if operand == 4:
-        return A
-    if operand == 5:
-        return B
-    if operand == 6:
-        return C
-    if operand == 7:
-        raise ValueError
+    match operand:
+        case 0 | 1 | 2 | 3:
+            return operand
+        case 4:
+            return A
+        case 5:
+            return B
+        case 6:
+            return C
+        case 7:
+            raise ValueError
 
 
-def disassemble(opcode, operand):
-    instr = {
-        0: "A <- A >> {combo_op} \t= {A:02d} >> {combo_operand:02d} \tA: {res:02d}",
-        1: "B <- B xor {operand:02d} \t= {B:02d} xor {operand:02d} \tB: {res:02d}",
-        2: "B <- {combo_op} mod 08 \t= {combo_operand:02d} mod 08 \tB: {res:02d}",
-        3: "A != 00? \t{A:2d} != 00? \tGOTO {operand:02d}",
-        4: "B <- B xor C \t= {B:02d} xor {C:02d} \tB: {res:02d}",
-        5: "Out: {combo_op} mod 08 \t= {combo_operand:02d} mod 08 \tOut: {res:02d}",
-        7: "C <- A >> {combo_op} \t= {A:02d} >> {combo_operand:02d} \tC: {res:02d}",
-        6: "B <- A >> {combo_op} \t= {A:02d} >> {combo_operand:02d} \tB: {res:02d}",
-    }
-    combo_ops = {
-        4: "A",
-        5: "B",
-        6: "C",
-    }
-    return instr[opcode].format(
-        A=A,
-        B=B,
-        C=C,
-        combo_op=combo_ops.get(operand, f"{operand:02d}"),
-        operand=operand,
-        combo_operand=combo(operand),
-        res=op[opcode](operand),
+def disassemble(program):
+    header = "```\nASSUME\tCS:CODE\n\nCODE\tSEGMENT\nProgram:"
+    body = "\n".join(
+        f"\t{op[opcode].__name__} {operand:02d}"
+        for opcode, operand in zip(program[::2], program[1::2])
     )
+    footer = "CODE\tENDS\n\nEND\tProgram\n```"
+    return f"{header}\n{body}\n{footer}"
 
 
-A, B, C = 0, 0, 0
-instruction_pointer = 0
+combo_verbose = {4: "A", 5: "B", 6: "C"}
 op = {
     0: adv,
     1: bxl,
@@ -110,73 +125,56 @@ op = {
     6: bdv,
     7: cdv,
 }
-stdout = []
+A, B, C = 0, 0, 0
+ip = 0
 
 
-def main(debug=False):
+def main(verbose=False):
     global A, B, C
-    global instruction_pointer
+    global ip
     with open("input.txt", "r") as fobj:
         A = int(next(fobj).rstrip().split(": ")[-1])
-        B = int(next(fobj).rstrip().split(": ")[-1])
-        C = int(next(fobj).rstrip().split(": ")[-1])
+        B = B_init = int(next(fobj).rstrip().split(": ")[-1])
+        C = C_init = int(next(fobj).rstrip().split(": ")[-1])
         next(fobj)
         program = tuple(map(int, next(fobj)[9:].split(",")))
 
-    if debug:
-        print("```\nASSUME\tCS:CODE\n\nCODE\tSEGMENT\nProgram:")
-        for i in range(0, len(program), 2):
-            print(f"\t{op[program[i]].__name__} {program[i+1]:02d}")
-        print("CODE\tENDS\n\nEND\tProgram\n```\n")
-        print(f"Register A: {A}\nRegister B: {B}\nRegister C: {C}\n")
-        while instruction_pointer < len(program):
-            opcode, operand = program[instruction_pointer : instruction_pointer + 2]
-            print(f"{instruction_pointer:02d}:", end="\t")
-            print(f"{op[opcode].__name__} {operand:02d}", end="\t\t")
-            print(disassemble(opcode, operand))
-            instruction_pointer += 2
-        print("\nOut:", ",".join(stdout))
+    if verbose:
+        print(disassemble(program), end="\n\n")
+        print(f"Register A: {A}\nRegister B: {B}\nRegister C: {C}")
 
-    else:
-        while instruction_pointer < len(program):
-            opcode, operand = program[instruction_pointer : instruction_pointer + 2]
-            op[opcode](operand)
-            instruction_pointer += 2
-        print(",".join(stdout))
+    while ip < len(program):
+        opcode, operand = program[ip : ip + 2]
+        if verbose:
+            print(
+                f"\n{ip:02d}\t{op[opcode].__name__} {operand:02d}",
+                end="\t\t",
+            )
+        op[opcode](operand, verbose)
+        ip += 2
+    print("\n" if verbose else "\b ")
 
-    ## Solved via manual DFS
-    A, B, C = 0, 0, 0
-    instruction_pointer = 0
-    for num in (6, 5, 6, 2, 5, 5, 0, 4, 5, 4, 2, 5, 7, 1, 5, 5):
-        A <<= 3
-        A |= num
-    print("\n", A)
-    while instruction_pointer < len(program):
-        opcode, operand = program[instruction_pointer : instruction_pointer + 2]
-        op[opcode](operand)
-        instruction_pointer += 2
-    print("Out:", ",".join(stdout))
-    print(program)
-
-    # for init_val in (5,):  # range(8):
-    #     print(init_val, end=": ")
-    #     A = 0
-    #     for num in (6, 5, 6, 2, 5, 5, 0, 4, 5, 4, 2, 5, 7, 1, 5):
-    #         A |= num
-    #         A = A << 3
-    #     A |= init_val
-    #     # 6, 5, 6, 2, 5, 5, 0|6, 4, 5|7, 4, 2, 5, 7, 0|1|2, 5, 5
-    #     print(A)
-    #     B = 0
-    #     C = 0
-    #     instruction_pointer = 0
-    #     while instruction_pointer < len(program):
-    #         opcode, operand = program[instruction_pointer : instruction_pointer + 2]
-    #         op[opcode](operand)
-    #         instruction_pointer += 2
-    #     print()
-    # print()
+    program_str = ",".join(map(str, program))
+    A_copy = 0
+    while A_copy < (1 << 3 * len(program)):
+        A, B, C = A_copy, B_init, C_init
+        ip = 0
+        with redirect_stdout(StringIO()) as output:
+            while ip < len(program):
+                opcode, operand = program[ip : ip + 2]
+                op[opcode](operand)
+                ip += 2
+        output_str = output.getvalue().rstrip(",")
+        if output_str == program_str:
+            break
+        if program_str.endswith(output_str):
+            A_copy <<= 3
+            continue
+        if A_copy & 0b111 == 7:
+            A_copy >>= 3
+        A_copy += 1
+    print(A_copy)
 
 
 if __name__ == "__main__":
-    main(debug=False)
+    main(verbose=False)

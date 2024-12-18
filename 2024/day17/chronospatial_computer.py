@@ -146,22 +146,22 @@ def main(verbose=False):
     run(program, verbose)
     print("" if verbose else "\b ")
 
-    program_str = ",".join(map(str, program))
     A_copy = 0
-    while A_copy < (1 << 3 * len(program)):
+    prg_ptr = -1
+    while 0 > prg_ptr > -(len(program) + 1):
         A, B, C = A_copy, B_init, C_init
         with redirect_stdout(StringIO()) as output:
-            run(program)
-        output_str = output.getvalue().rstrip(",")
-        if output_str == program_str:
-            break
-        if program_str.endswith(output_str):
+            run(program[:-2])
+        out_ = int(output.getvalue().rstrip(","))
+        if out_ == program[prg_ptr]:
             A_copy <<= 3
+            prg_ptr -= 1
             continue
         if A_copy & 0b111 == 7:
             A_copy >>= 3
+            prg_ptr += 1
         A_copy += 1
-    print(A_copy)
+    print(A_copy >> 3 if prg_ptr else None)
 
 
 if __name__ == "__main__":

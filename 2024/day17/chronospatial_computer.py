@@ -8,57 +8,43 @@ import argparse
 
 def adv(operand):
     global A
-    res = A >> combo(operand)
-    A = res
-    return res
+    A = A >> combo(operand)
 
 
 def bxl(operand):
     global B
-    res = B ^ operand
-    B = res
-    return res
+    B = B ^ operand
 
 
 def bst(operand):
     global B
-    res = combo(operand) & 0b111
-    B = res
-    return res
+    B = combo(operand) & 0b111
 
 
 def jnz(operand):
     global ip
-    if A:
+    if A != 0:
         ip = operand - 2
-    return ip + 2
 
 
 def bxc(operand):
     global B
-    res = B ^ C
-    B = res
-    return res
+    B = B ^ C
 
 
 def out(operand):
     res = combo(operand) & 0b111
     sys.stdout.write(f"{res},")
-    return res
 
 
 def bdv(operand):
     global B
-    res = A >> combo(operand)
-    B = res
-    return res
+    B = A >> combo(operand)
 
 
 def cdv(operand):
     global C
-    res = A >> combo(operand)
-    C = res
-    return res
+    C = A >> combo(operand)
 
 
 def combo(operand):
@@ -75,22 +61,34 @@ def combo(operand):
             raise ValueError
 
 
-def run(program, verbose=False):
+op = {
+    0: adv,
+    1: bxl,
+    2: bst,
+    3: jnz,
+    4: bxc,
+    5: out,
+    6: bdv,
+    7: cdv,
+}
+
+
+def run(program):
     global ip
     ip = 0
     while ip < len(program):
-        ipv = f"{ip:02d}"
+        # ipv = f"{ip:02d}"
         opcode, operand = program[ip : ip + 2]
-        res = op[opcode](operand)
+        op[opcode](operand)
         ip += 2
-        if verbose:
-            instr = f"{op[opcode].__name__} {operand:02d}"
-            info = opinfo[opcode].format(
-                literalop=f"{operand:02d}",
-                comboop=comboinfo.get(operand, f"{operand:02d}"),
-                res=f"{res:02d}",
-            )
-            print(f"\r{ipv}\t{instr}\t\t{info}")
+        # if verbose:
+        #     instr = f"{op[opcode].__name__} {operand:02d}"
+        #     info = opinfo[opcode].format(
+        #         literalop=f"{operand:02d}",
+        #         comboop=comboinfo.get(operand, f"{operand:02d}"),
+        #         res=f"{res:02d}",
+        #     )
+        #     print(f"\r{ipv}\t{instr}\t\t{info}")
 
 
 def disassemble(program):
@@ -102,17 +100,6 @@ def disassemble(program):
     footer = "CODE\tENDS\n\nEND\tProgram\n```"
     return f"{header}\n{body}\n{footer}"
 
-
-op = {
-    0: adv,
-    1: bxl,
-    2: bst,
-    3: jnz,
-    4: bxc,
-    5: out,
-    6: bdv,
-    7: cdv,
-}
 
 opinfo = {
     0: "A <- A >> {comboop}\tA: {res}",

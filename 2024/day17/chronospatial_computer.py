@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 -O
 
 from io import StringIO
-import sys
 from contextlib import redirect_stdout
-import argparse
 
 
 def adv(operand):
@@ -34,7 +32,7 @@ def bxc(operand):
 
 def out(operand):
     res = combo(operand) & 0b111
-    sys.stdout.write(f"{res},")
+    print(res, end=",")
 
 
 def bdv(operand):
@@ -61,7 +59,7 @@ def combo(operand):
             raise ValueError
 
 
-op = {
+instruction = {
     0: adv,
     1: bxl,
     2: bst,
@@ -77,54 +75,61 @@ def run(program):
     global ip
     ip = 0
     while ip < len(program):
-        # ipv = f"{ip:02d}"
         opcode, operand = program[ip : ip + 2]
-        op[opcode](operand)
+        instruction[opcode](operand)
         ip += 2
-        # if verbose:
-        #     instr = f"{op[opcode].__name__} {operand:02d}"
-        #     info = opinfo[opcode].format(
-        #         literalop=f"{operand:02d}",
-        #         comboop=comboinfo.get(operand, f"{operand:02d}"),
-        #         res=f"{res:02d}",
-        #     )
-        #     print(f"\r{ipv}\t{instr}\t\t{info}")
 
 
 def disassemble(program):
-    header = "```\nASSUME\tCS:CODE\n\nCODE\tSEGMENT\nProgram:"
-    body = "\n".join(
-        f"\t{op[opcode].__name__} {operand:02d}"
-        for opcode, operand in zip(program[::2], program[1::2])
-    )
-    footer = "CODE\tENDS\n\nEND\tProgram\n```"
-    return f"{header}\n{body}\n{footer}"
+    instr_info = {
+        0: "A RSHIFT {comboop}\tSTORE A",
+        1: "B XOR {literalop}\tSTORE B",
+        2: "{comboop} MOD 08\tSTORE B",
+        3: "IF A NEQ 00\tJUMP {literalop}",
+        4: "B XOR C\tSTORE B",
+        5: "{comboop} MOD 08\tOUTPUT",
+        6: "A RSHIFT {comboop}\tSTORE B",
+        7: "A RSHIFT {comboop}\tSTORE C",
+    }
+    code = []
+    for opcode, operand in zip(program[::2], program[1::2]):
+        lop = f"{operand:02d}"
+        cop = {4: "A", 5: "B", 6: "C"}.get(operand, lop)
+        code.append(
+            f"\t{instruction[opcode].__name__} {lop}\t\t; "
+            + instr_info[opcode].format(literalop=lop, comboop=cop)
+        )
+    return "\n".join(code)
 
 
-opinfo = {
-    0: "A <- A >> {comboop}\tA: {res}",
-    1: "B <- B xor {literalop}\tB: {res}",
-    2: "B <- {comboop} mod 08\tB: {res}",
-    3: "A =/= 00?\tJMP {res}",
-    4: "B <- B xor C\tB: {res}",
-    5: "OUT {comboop} mod 08\tOUT {res}",
-    6: "B <- A >> {comboop}\tB: {res}",
-    7: "C <- A >> {comboop}\tC: {res}",
-}
-comboinfo = {
-    4: "A",
-    5: "B",
-    6: "C",
-}
-
-
-def main(argv):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbose", action="store_true")
-    args = parser.parse_args()
-
-    global A, B, C
+def debug(program):
     global ip
+    suffix = {
+        0: "{A}",
+        1: "{B}",
+        2: "{B}",
+        3: "",
+        4: "{B}",
+        5: "{out}",
+        6: "{B}",
+        7: "{C}",
+    }
+    output = StringIO()
+    ip = 0
+    while ip < len(program):
+        print(f"{ip:02d}", end="")
+        opcode, operand = prog = program[ip : ip + 2]
+        print(disassemble(prog), end="\t")
+        with redirect_stdout(StringIO()) as stream:
+            instruction[opcode](operand)
+        output.write(out_ := stream.getvalue())
+        ip += 2
+        print(suffix[opcode].format(A=A, B=B, C=C, out=out_.rstrip(",")))
+    print("\nOutput:", output.getvalue().rstrip(","))
+
+
+def main():
+    global A, B, C
     with open("input.txt", "r") as fobj:
         A = int(next(fobj).rstrip().split(": ")[-1])
         B = B_init = int(next(fobj).rstrip().split(": ")[-1])
@@ -132,29 +137,31 @@ def main(argv):
         next(fobj)
         program = tuple(map(int, next(fobj)[9:].split(",")))
 
-    if args.verbose:
-        print(disassemble(program), end="\n\n")
+    if __debug__:
+        print("```\nmain:\n", disassemble(program), "\n```", end="\n\n")
         print(f"Register A: {A}\nRegister B: {B}\nRegister C: {C}", end="\n\n")
-    run(program, args.verbose)
-    print("" if args.verbose else "\b ")
+        debug(program)
+    else:
+        run(program)
+    print("\b ")
 
-    A_copy = 0
+    A_init = 0
     prg_ptr = -1
     while 0 > prg_ptr > -(len(program) + 1):
-        A, B, C = A_copy, B_init, C_init
+        A, B, C = A_init, B_init, C_init
         with redirect_stdout(StringIO()) as output:
             run(program[:-2])
         out_ = int(output.getvalue().rstrip(","))
         if out_ == program[prg_ptr]:
-            A_copy <<= 3
+            A_init <<= 3
             prg_ptr -= 1
             continue
-        if A_copy & 0b111 == 7:
-            A_copy >>= 3
+        if A_init & 0b111 == 7:
+            A_init >>= 3
             prg_ptr += 1
-        A_copy += 1
-    print(A_copy >> 3 if prg_ptr else None)
+        A_init += 1
+    print(A_init >> 3 if prg_ptr else None)
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
